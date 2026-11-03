@@ -19,78 +19,45 @@ git clone https://github.com/jaychou805/dajian-inventory.git ~/.workbuddy/skills
 
 ---
 
-## 第 2 步：改配置（唯一要动手的地方）
+## 第 2 步：一键配置（自动探测路径）
 
-打开文件：
-
-```
-C:\Users\<你的用户名>\.workbuddy\skills\dajian-inventory\config.json
-```
-
-里面有一块 `paths`，长这样（这是作者的机器，你要改成自己的）：
-
-```jsonc
-"paths": {
-  "node": "C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node.exe",
-  "agentBrowser": "C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/agent-browser/bin/agent-browser.js",
-  "python": "C:/Users/xiaozhihe/.workbuddy/binaries/python/versions/3.13.12/python.exe",
-  "edsdkDir": "D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/workbuddy-local-office-edit",
-  "chromeProfile": "C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile",
-  "workDir": "C:/Users/xiaozhihe/WorkBuddy/1",
-  "excelFile": "C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx"
-}
-```
-
-### 逐个字段怎么填
-
-| 字段 | 填什么 | 怎么找到真实值 |
-|---|---|---|
-| `node` | 你机器上的 node.exe | 见下方「查路径」命令 ① |
-| `agentBrowser` | agent-browser.js | 和 node 同版本目录，见命令 ② |
-| `python` | 你机器上的 python.exe | 见命令 ③ |
-| `edsdkDir` | WorkBuddy 的本地 Office 编辑技能目录 | 见命令 ④ |
-| `chromeProfile` | 任意目录，建议 `C:/Users/<你>/.workbuddy/erp-chrome-profile` | 不存在会自动创建，不用预先建 |
-| `workDir` | 你想放数据的地方，建议 `C:/Users/<你>/WorkBuddy/1` | 随便填，能建目录即可 |
-| `excelFile` | **你自己的库存 Excel 路径** | 你的表在哪就填哪，文件名按实际 |
-
-### 查路径命令（复制到 WorkBuddy 终端或 CMD 跑）
+跑仓库根目录的一键配置脚本：
 
 ```bash
-# ① node 版本目录
-ls ~/.workbuddy/binaries/node/versions/
-
-# ② agent-browser（和 node 同目录）
-ls ~/.workbuddy/binaries/node/versions/<上一步的版本号>/node_modules/agent-browser/bin/
-
-# ③ python 版本目录
-ls ~/.workbuddy/binaries/python/versions/
-
-# ④ edsdk 目录（WorkBuddy 装在哪个盘就换成哪个盘）
-# 常见：D:/WorkBuddy 或 C:/Program Files/WorkBuddy
-ls "D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/"
+cd ~/.workbuddy/skills/dajian-inventory
+node setup.mjs --excel "C:\Users\<你的用户名>\Desktop\你的库存表.xlsx"
 ```
 
-> 核心就是：把 `xiaozhihe` 换成你的用户名，把版本号换成你机器上的实际版本号。
+脚本会**自动探测**并填入：
+- `node` / `agent-browser` / `python`（从 WorkBuddy 内置目录自动找版本号）
+- `edsdkDir`（自动找 WorkBuddy 安装目录）
+- `chromeProfile` / `workDir`（按默认规则自动填）
 
-### 最容易踩的两个坑
+**你只需要提供 `--excel`**（你自己的库存表路径），其余全自动。
 
-1. **版本号目录不同**：`22.22.2-6`、`3.13.12` 这类目录名每台机器可能不一样，务必用 `ls` 查实际值，别照抄。
-2. **`excelFile` 必须是自己的表**：这是库存要写进去的目标文件，结构要求见下。
+运行后看到：
 
-### Excel 表结构要求（`excelFile` 指向的文件）
+```
+✅ node       : .../node.exe
+✅ agentBrowser: .../agent-browser.js
+✅ python     : .../python.exe
+✅ edsdkDir   : ...
+✅ excelFile  : 你的表.xlsx
+SKU 数: 89
+✅ 全部就绪，请登录 ERP
+```
+
+就说明配置成功。
+
+### 如果不想用脚本（手动改）
+
+打开 `config.json`，把 `paths` 里的 `xiaozhihe`、版本号、路径换成你自己的。模板参考 `config.example.json`。
+
+### Excel 表结构要求（`--excel` 指向的文件）
 
 - **A 列** = SKU（8 位数字）
 - **C 列** = 库存值（脚本会写 `A+B`，即美东仓+美西仓，格式如 `12+8`）
 - A 列里的 SKU 要和 `config.json` 的 `skuList` 一致（不同 SKU 会跳过，并在报告里提示缺失）
-
-### 改完验证
-
-```bash
-cd ~/.workbuddy/skills/dajian-inventory/scripts
-node -e "import('./config.mjs').then(m=>console.log('SKU数:', m.cfg.skuList.length))"
-```
-
-输出 `SKU数: 89` 就说明配置读对了。
 
 ---
 

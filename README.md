@@ -17,33 +17,34 @@ git clone https://github.com/jaychou805/dajian-inventory.git ~/.workbuddy/skills
 **👉 直接看 [`docs/setup.md`](docs/setup.md)**——同事专用傻瓜式上手文档，4 步从零到能跑：
 
 1. 下载 skill
-2. 改 `config.json`（复制 `config.example.json` 改路径）
+2. **一键配置**：`node setup.mjs --excel "你的库存表.xlsx"`（自动探测路径）
 3. 登录 ERP
 4. 日常对 WorkBuddy 说「跑库存监控」即可
 
-> 所有路径/SKU/仓库配置集中在 `config.json`，脚本运行时读取，改这一处即可迁移。`config.example.json` 是带占位符的模板，供首次配置参考。
+> 所有路径/SKU/仓库配置集中在 `config.json`，`setup.mjs` 自动探测生成；`config.example.json` 是带占位符的模板。
 
 ## 结构
 
 ```
 dajian-inventory/
-├── config.json               # 配置中心（你的真实路径，已在仓库）
-├── config.example.json       # 模板（占位符，供同事参考）
-├── SKILL.md                  # skill 主文档
+├── setup.mjs                  # 一键配置脚本（自动探测路径生成 config.json）
+├── config.json                # 配置中心（你的真实路径，已在仓库）
+├── config.example.json        # 模板（占位符，供参考）
+├── SKILL.md                   # skill 主文档
 ├── README.md
 ├── docs/
-│   └── setup.md              # 同事上手文档（从零到能跑）
+│   └── setup.md               # 同事上手文档（从零到能跑）
 ├── scripts/
-│   ├── config.mjs            # 共享配置加载
-│   ├── fetch_inventory.mjs   # 采集
-│   ├── erp_login_holder.mjs  # 会话恢复
-│   ├── convert_extracted.mjs # 转换
-│   ├── process_inventory.mjs # 比对+报告
-│   ├── sync_excel.py         # 写 Excel
-│   ├── append_row.py         # 补行
-│   └── js_*.js               # 浏览器内 eval 脚本
+│   ├── config.mjs             # 共享配置加载
+│   ├── fetch_inventory.mjs    # 采集
+│   ├── erp_login_holder.mjs   # 会话恢复
+│   ├── convert_extracted.mjs  # 转换
+│   ├── process_inventory.mjs  # 比对+报告
+│   ├── sync_excel.py          # 写 Excel
+│   ├── append_row.py          # 补行
+│   └── js_*.js                # 浏览器内 eval 脚本
 └── references/
-    └── paths.md              # 路径说明（已抽到 config.json）
+    └── paths.md               # 路径说明（已抽到 config.json）
 ```
 
 ## 说明

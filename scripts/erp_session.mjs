@@ -1,11 +1,12 @@
 import { execFile } from 'child_process';
 import fs from 'fs';
+import { cfg } from './config.mjs';
 
-const NODE = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node.exe';
-const AB = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/agent-browser/bin/agent-browser.js';
-const PROFILE = 'C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile';
-const STATUS_FILE = 'C:/Users/xiaozhihe/WorkBuddy/1/erp_session_status.json';
-const ERP_URL = 'https://888.zhcxkj.com/Manager/index.aspx?IsWeakPassword=false';
+const NODE = cfg.paths.node;
+const AB = cfg.paths.agentBrowser;
+const PROFILE = cfg.paths.chromeProfile;
+const STATUS_FILE = cfg.paths.workDir + '/erp_session_status.json';
+const ERP_URL = cfg.erp.loginUrl;
 
 const GLOBAL_FLAGS = ['--profile', PROFILE, '--headed', '--args', '--no-sandbox,--disable-gpu'];
 

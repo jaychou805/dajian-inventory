@@ -1,49 +1,57 @@
-# 路径依赖清单
+# 路径与配置说明
 
-脚本内含**绝对路径**，迁移到新机器或新账号时需修改以下位置。
+所有路径/SKU/仓库配置已集中到仓库根目录的 **`config.json`**，脚本运行时读取它，无需改脚本内部代码。
 
-## 1. Node 可执行文件与 agent-browser
+## config.json 结构
 
-出现在：`fetch_inventory.mjs`、`erp_login_holder.mjs`、`erp_session.mjs`、`ab_run.mjs`
-
+```jsonc
+{
+  "erp": {
+    "loginUrl": "...",      // ERP 登录页
+    "overseasUrl": "...",   // 备货页（直连）
+    "startTime": "2022-07-01",
+    "pageSize": 200
+  },
+  "paths": {
+    "node": "...",          // node.exe 绝对路径
+    "agentBrowser": "...",  // agent-browser.js 绝对路径
+    "python": "...",        // python.exe 绝对路径
+    "edsdkDir": "...",      // edsdk.py 所在目录（WorkBuddy 本地 Office 编辑技能）
+    "chromeProfile": "...", // Chrome 登录 profile 目录
+    "workDir": "...",       // 工作目录（脚本/数据所在）
+    "excelFile": "..."      // Excel 源=目标文件
+  },
+  "warehouses": {
+    "statistical": [...],   // 统计仓（严格精确匹配）
+    "excluded": [...]       // 排除仓
+  },
+  "skuList": [...]          // SKU 清单（单一来源）
+}
 ```
-const NODE = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node.exe';
-const AB   = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/agent-browser/bin/agent-browser.js';
-```
 
-> 注意版本号目录 `22.22.2-6` 可能变化；`ab_run.mjs` 里是 `22.22.2-3`（旧）。
+## 迁移到新机器：改什么
 
-## 2. Chrome 登录 Profile
+1. `paths.*` 全部改成新机器真实路径。
+2. 若 node 版本变化，注意 `node.exe` 版本目录名（如 `22.22.2-6`）可能不同。
+3. `chromeProfile` 需在新机器重新登录 ERP（登录态存于该 profile，无法跨机器迁移）。
+4. `erp` / `warehouses` / `skuList` 通常无需改（除非业务变化）。
 
-出现在：上述所有 .mjs 的 `PROFILE` 常量
+## 依赖清单
 
-```
-C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile
-```
-
-登录态存于此 profile，过期需用户在弹出窗口重登。
-
-## 3. 工作目录 / 状态文件
-
-- `fetch_inventory.mjs` 的 `ROOT = 'C:/Users/xiaozhihe/WorkBuddy/1'`
-- `convert_extracted.mjs` 的硬编码读写路径（extracted_raw.txt、inventory-today.txt）
-- `erp_login_holder.mjs` / `erp_session.mjs` 的 `STATUS_FILE = '.../erp_session_status.json'`
-
-## 4. Excel 文件
-
-- `sync_excel.py`：`SRC` / `DST` = `C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx`
-- `append_row.py`：`SRC` 同 Excel 路径
-
-## 5. Python 与 editor_sdk
-
-- `sync_excel.py` / `append_row.py`：
-  - `PYTHON = C:/Users/xiaozhihe/.workbuddy/binaries/python/versions/3.13.12/python.exe`
-  - `EDSdk_DIR`（sync_excel.py 指向 `workbuddy-local-office-edit`，append_row.py 指向 `tencent-local-office-edit`）
+| 依赖 | 用途 | 获取 |
+|---|---|---|
+| node.exe | 运行 .mjs 脚本 | WorkBuddy 内置，或自行安装 Node 22+ |
+| agent-browser | 浏览器自动化 CLI | node 模块，含各平台二进制（win32/darwin/linux） |
+| Python 3.11+ | 运行 .py（Excel 写入） | 标准 Python |
+| edsdk.py | 本地 Office/WPS 编辑 SDK | WorkBuddy 本地 Office 编辑技能目录；非 WorkBuddy 环境需自备等价工具 |
+| Chrome + 登录 profile | ERP 登录态 | 首次用 erp_login_holder.mjs 登录后持久化 |
 
 ## 数据目录
 
-运行时数据写入工作目录下的 `inventory-snapshots/`：
+运行时数据写入 `workDir/inventory-snapshots/`：
 - `inventory-today.txt`（今日输入）
 - `snapshot-YYYY-MM-DD.json`（每日快照，只保留最近两份）
 - `excel-updates.json`（Excel 更新指令）
 - `report-today.md`（日报）
+
+`workDir/extracted_raw.txt` 为采集中间产物。

@@ -2,14 +2,15 @@
 // 必须以 run_in_background 方式运行（daemon 需要父进程存活）
 import { execFile } from 'child_process';
 import fs from 'fs';
+import { cfg } from './config.mjs';
 
-const NODE = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node.exe';
-const AB = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/agent-browser/bin/agent-browser.js';
-const PROFILE = 'C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile';
-const ROOT = 'C:/Users/xiaozhihe/WorkBuddy/1';
+const NODE = cfg.paths.node;
+const AB = cfg.paths.agentBrowser;
+const PROFILE = cfg.paths.chromeProfile;
+const ROOT = cfg.paths.workDir;
 
 const GLOBAL_FLAGS = ['--profile', PROFILE, '--headed', '--args', '--no-sandbox,--disable-gpu'];
-const ERP_URL = 'https://888.zhcxkj.com/IrobotBox/SalesAnalysis/OverseasAnalysis.aspx';
+const ERP_URL = cfg.erp.overseasUrl;
 
 function log(msg) { console.log('[' + new Date().toISOString() + '] ' + msg); }
 
@@ -71,8 +72,12 @@ async function main() {
     process.exit(3);
   }
 
-  // step4: 设置查询参数并触发搜索
-  const setupJs = fs.readFileSync(ROOT + '/js_setup_query.js', 'utf8');
+  // step4: 设置查询参数并触发搜索（从 config 注入 SKU/起始时间/每页条数）
+  let setupJs = fs.readFileSync(ROOT + '/js_setup_query.js', 'utf8');
+  setupJs = setupJs
+    .replace('__SKUS_PLACEHOLDER__', cfg.skuList.join('\\n'))
+    .replace('__START_TIME__', cfg.erp.startTime)
+    .replace('__PAGE_SIZE__', String(cfg.erp.pageSize));
   const r4 = await run(['eval', '-b', b64(setupJs)], 90000);
   log('setup result: ' + (r4.stdout || r4.stderr).trim().slice(0, 300));
   if (!(r4.stdout || '').includes('SearchIt(2) CALLED')) { log('FATAL: setup failed'); process.exit(4); }

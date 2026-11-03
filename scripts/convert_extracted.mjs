@@ -1,7 +1,9 @@
 // 把 extracted_raw.txt (agent-browser eval 输出) 转换为 inventory-today.txt 格式
 import fs from 'fs';
+import { cfg } from './config.mjs';
 
-const raw = fs.readFileSync('C:/Users/xiaozhihe/WorkBuddy/1/extracted_raw.txt', 'utf8');
+const ROOT = cfg.paths.workDir;
+const raw = fs.readFileSync(ROOT + '/extracted_raw.txt', 'utf8');
 
 // 1. 去掉 bash 警告行，提取引号内的内容；若是已解码的纯文本则直接使用
 const start = raw.indexOf('"');
@@ -45,7 +47,7 @@ out.push('共 ' + declaredRows + ' 条记录');
 out.push('产品SKU,产品名称,发货仓库,可用库存');
 for (const d of dataLines) out.push(d.sku + ',' + d.name + ',' + d.wh + ',' + d.stock);
 
-fs.writeFileSync('C:/Users/xiaozhihe/WorkBuddy/1/inventory-snapshots/inventory-today.txt', out.join('\n') + '\n', 'utf8');
+fs.writeFileSync(ROOT + '/inventory-snapshots/inventory-today.txt', out.join('\n') + '\n', 'utf8');
 console.log('WROTE inventory-today.txt:', out.length - 2, 'data rows');
 
 // 5. 统计仓库分布（信息用）

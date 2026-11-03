@@ -1,0 +1,36 @@
+{
+  "erp": {
+    "loginUrl": "https://888.zhcxkj.com/Manager/index.aspx?IsWeakPassword=false",
+    "overseasUrl": "https://888.zhcxkj.com/IrobotBox/SalesAnalysis/OverseasAnalysis.aspx",
+    "startTime": "2022-07-01",
+    "pageSize": 200
+  },
+  "paths": {
+    "node": "C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node.exe",
+    "agentBrowser": "C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-6/node_modules/agent-browser/bin/agent-browser.js",
+    "python": "C:/Users/xiaozhihe/.workbuddy/binaries/python/versions/3.13.12/python.exe",
+    "edsdkDir": "D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/workbuddy-local-office-edit",
+    "chromeProfile": "C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile",
+    "workDir": "C:/Users/xiaozhihe/WorkBuddy/1",
+    "excelFile": "C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx"
+  },
+  "warehouses": {
+    "statistical": ["易达云美东仓", "盛宝隆美西仓（共仓）", "易可达美南仓"],
+    "excluded": ["易可达美东仓", "西邮美东"]
+  },
+  "skuList": [
+    "22609577","23147389","22543798","21828126","21596642","22746153","23099218","21617402",
+    "22221924","21950073","21760616","21605550","22939355","22607814","22886567","23068415",
+    "22229383","21849568","23042729","21828274","22504701","22931694","22354746","21844802",
+    "22481612","22766367","22342499","22634028","21594621","21538348","23017172","22802956",
+    "21528974","22881955","23291458","22625731","23068364","23099106","21552221","22937113",
+    "22337338","23130056","22634112","23305628","23099975","23100315","23100342","22609734",
+    "22931529","21657851","22443675","22250205","21981272","21849416","21536612","21935816",
+    "23067817","21537372","21552723","23017301","22607116","22503619","22746620","22801168",
+    "22503694","21678873","22520305","23068324",
+    "23306230","22931770","22491953","22425147","22225773","23418819",
+    "23418978","23305008","22571216","21740083","22608036","22749294",
+    "22773245","22639294","22875802","23044695","23399446","23419085",
+    "22029226","22333041","22441555"
+  ]
+}

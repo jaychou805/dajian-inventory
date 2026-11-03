@@ -8,12 +8,23 @@
 
 复制整个 `dajian-inventory/` 目录到 `~/.workbuddy/skills/`（用户级）或项目 `.workbuddy/skills/`（项目级）。
 
+## 首次使用（必读）
+
+1. **改 `config.json`**：把 `paths` 下的 node / agent-browser / python / edsdkDir / chromeProfile / workDir / excelFile 改成你机器上的真实路径。
+2. **装依赖**：agent-browser（node 模块）、Python 3.11+、edsdk.py（WorkBuddy 本地 Office 编辑技能）。
+3. **登录 ERP**：跑 `scripts/erp_login_holder.mjs`，弹窗内登录智汇 ERP，登录态持久化到 chromeProfile。
+
+> 所有路径/SKU/仓库配置集中在 `config.json`，脚本运行时读取，改这一处即可迁移。
+
 ## 结构
 
 ```
 dajian-inventory/
-├── SKILL.md                  # skill 主文档（触发、流程、配置、坑）
-├── scripts/                  # 全部可执行脚本
+├── config.json               # 配置中心（路径/SKU/仓库/ERP）
+├── SKILL.md                  # skill 主文档
+├── README.md
+├── scripts/
+│   ├── config.mjs            # 共享配置加载
 │   ├── fetch_inventory.mjs   # 采集
 │   ├── erp_login_holder.mjs  # 会话恢复
 │   ├── convert_extracted.mjs # 转换
@@ -22,10 +33,9 @@ dajian-inventory/
 │   ├── append_row.py         # 补行
 │   └── js_*.js               # 浏览器内 eval 脚本
 └── references/
-    └── paths.md              # 绝对路径依赖清单（迁移必读）
+    └── paths.md              # 路径说明（已抽到 config.json）
 ```
 
 ## 说明
 
-- 脚本内含本机绝对路径，迁移需改（见 `references/paths.md`）。
-- 详见 `SKILL.md`。
+详见 `SKILL.md`。

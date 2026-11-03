@@ -5,9 +5,15 @@ import os
 import sys
 import time
 
-EDSdk_DIR = r"D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/tencent-local-office-edit"
-PYTHON = r"C:/Users/xiaozhihe/.workbuddy/binaries/python/versions/3.13.12/python.exe"
-SRC = r"C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx"
+# 从 config.json 读取路径
+_here = os.path.dirname(os.path.abspath(__file__))
+_cfg_path = os.path.join(_here, "..", "config.json")
+with open(_cfg_path, "r", encoding="utf-8") as _f:
+    _CFG = json.load(_f)
+
+EDSdk_DIR = _CFG["paths"]["edsdkDir"]
+PYTHON = _CFG["paths"]["python"]
+SRC = _CFG["paths"]["excelFile"]
 
 SKU = "22441555"
 NAME = "50层橱柜门干燥架 油画艺术展示架 重型金属晾画架"

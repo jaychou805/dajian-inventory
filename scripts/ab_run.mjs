@@ -1,9 +1,10 @@
 // 单次执行 agent-browser 命令并可靠捕获 stdout/stderr
 import { execFile } from 'child_process';
+import { cfg } from './config.mjs';
 
-const NODE = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-3/node.exe';
-const AB = 'C:/Users/xiaozhihe/.workbuddy/binaries/node/versions/22.22.2-3/node_modules/agent-browser/bin/agent-browser.js';
-const PROFILE = 'C:/Users/xiaozhihe/.workbuddy/erp-chrome-profile';
+const NODE = cfg.paths.node;
+const AB = cfg.paths.agentBrowser;
+const PROFILE = cfg.paths.chromeProfile;
 
 const GLOBAL_FLAGS = ['--profile', PROFILE, '--headed', '--args', '--no-sandbox,--disable-gpu'];
 

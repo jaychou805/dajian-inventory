@@ -11,12 +11,17 @@ import time
 import datetime
 import re
 
-EDSdk_DIR = r"D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/workbuddy-local-office-edit"
-PYTHON = r"C:/Users/xiaozhihe/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+# 从 config.json 读取路径（与 Node 脚本共享同一配置）
+_here = os.path.dirname(os.path.abspath(__file__))
+_cfg_path = os.path.join(_here, "..", "config.json")
+with open(_cfg_path, "r", encoding="utf-8") as _f:
+    _CFG = json.load(_f)
 
-SRC = r"C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx"
-DST = r"C:/Users/xiaozhihe/Desktop/95已上产品-已同步最新库存-20260915.xlsx"
-UPDATES_JSON = r"C:/Users/xiaozhihe/WorkBuddy/1/inventory-snapshots/excel-updates.json"
+EDSdk_DIR = _CFG["paths"]["edsdkDir"]
+PYTHON = _CFG["paths"]["python"]
+SRC = _CFG["paths"]["excelFile"]
+DST = _CFG["paths"]["excelFile"]
+UPDATES_JSON = os.path.join(_CFG["paths"]["workDir"], "inventory-snapshots", "excel-updates.json")
 
 
 def edsdk_call(tool, args):

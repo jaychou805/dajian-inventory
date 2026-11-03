@@ -16,21 +16,36 @@ agent_created: true
 - 每日定时自动化触发（周一至周五 9:00）。
 - 用户粘贴 ERP 查询结果，要求生成变化报告与 Excel 更新。
 
-## 关键配置（改这里，不改脚本内部）
+## 首次使用（别人 clone 后必读）
 
-| 项 | 值 |
-|---|---|
-| ERP 登录页 | `https://888.zhcxkj.com/Manager/index.aspx?IsWeakPassword=false` |
-| 备货页（直连，绕过 frameset） | `https://888.zhcxkj.com/IrobotBox/SalesAnalysis/OverseasAnalysis.aspx` |
-| 统计仓（严格精确匹配） | 易达云美东仓、盛宝隆美西仓（共仓）、易可达美南仓 |
-| 排除仓（一律排除） | 易可达美东仓、西邮美东（以及任何非统计仓名称，如盛宝隆美客多墨西哥仓、盛宝隆波兰仓） |
-| 查询起始时间 | 2022-07-01 |
-| 每页条数 | 200（不支持则 100） |
-| SKU 清单 | `scripts/js_setup_query.js` 内 SKUS 变量 + `scripts/process_inventory.mjs` 内 SKU_ORDER 数组（两者须同步维护） |
-| Excel 源/目标文件 | `C:\Users\xiaozhihe\Desktop\95已上产品-已同步最新库存-20260915.xlsx`（原地迭代，源=目标；被占用时改存 `95已上产品-已同步最新库存-YYYYMMDD.xlsx`） |
-| C 列 = 易达云美东(A) + 盛宝隆美西(B)，格式 `A+B` | 标红规则：A 或 B 任一 ≤3 → 整格红字（判单个，不是合计） |
+所有可配置项集中在 **`config.json`**（仓库根目录），脚本运行时读取它，无需改脚本内部。首次使用三步：
 
-> **路径依赖**：脚本内含绝对路径（node.exe、agent-browser、erp-chrome-profile、Excel 文件、工作目录）。迁移到新机器需改 `scripts/` 下各文件顶部的常量。清单见 `references/paths.md`。
+1. **改 `config.json`**：把 `paths` 下的 node.exe / agent-browser.js / python.exe / edsdkDir / chromeProfile / workDir / excelFile 全部改成你机器上的真实路径；`erp` 和 `warehouses` 一般无需改；`skuList` 按需增删。
+2. **装依赖**：
+   - `agent-browser`（node 模块，提供 `agent-browser.js` CLI 与 `agent-browser-win32-x64.exe` 等二进制）。
+   - Python 3.11+。
+   - `edsdk.py`（WorkBuddy 本地 Office 编辑技能目录，本机路径见 config 的 `edsdkDir`；非 WorkBuddy 环境需自备等价的本地 Excel 写入工具）。
+3. **登录 ERP**：首次跑 `erp_login_holder.mjs`，在弹窗内登录智汇 ERP 并保持 chromeProfile（`paths.chromeProfile`），登录态会持久化到该 profile。
+
+> 本机（作者）的 config.json 已预填好，clone 后**必须先改路径**才能跑，否则脚本读到你机器上不存在的路径会直接报错。
+
+## 关键配置（改 config.json，不改脚本内部）
+
+| 项 | config 键 | 说明 |
+|---|---|---|
+| ERP 登录页 | `erp.loginUrl` | 默认 `https://888.zhcxkj.com/Manager/index.aspx?IsWeakPassword=false` |
+| 备货页（直连，绕过 frameset） | `erp.overseasUrl` | `https://888.zhcxkj.com/IrobotBox/SalesAnalysis/OverseasAnalysis.aspx` |
+| 查询起始时间 | `erp.startTime` | 默认 `2022-07-01` |
+| 每页条数 | `erp.pageSize` | 默认 `200` |
+| 统计仓（严格精确匹配） | `warehouses.statistical` | 易达云美东仓、盛宝隆美西仓（共仓）、易可达美南仓 |
+| 排除仓（一律排除） | `warehouses.excluded` | 易可达美东仓、西邮美东（非统计仓名称一律排除） |
+| SKU 清单 | `skuList` | 单一来源；脚本运行时自动注入查询与报告 |
+| node/agent-browser/python/edsdk/chromeProfile/workDir/excelFile | `paths.*` | 各脚本读此路径 |
+| Excel 源/目标文件 | `paths.excelFile` | 原地迭代（源=目标）；被占用时改存 `95已上产品-已同步最新库存-YYYYMMDD.xlsx` |
+
+**标红规则**：C 列 = 易达云美东(A) + 盛宝隆美西(B)，格式 `A+B`；A 或 B 任一 ≤3 → 整格红字（判单个，不是合计）。
+
+> 路径依赖已从脚本内抽离到 `config.json`，迁移只需改这一处。详见 `references/paths.md`。
 
 ## 工作流程（全自动链路）
 
@@ -127,6 +142,7 @@ python scripts/sync_excel.py
 
 | 脚本 | 语言 | 作用 |
 |---|---|---|
+| config.mjs | Node | 共享配置加载（读 config.json） |
 | fetch_inventory.mjs | Node | 全自动采集 + 翻页补采 |
 | erp_login_holder.mjs | Node | 备货页保活 + 会话恢复 |
 | erp_session.mjs | Node | 主后台(index.aspx)保活（旧，可不用） |
@@ -134,15 +150,17 @@ python scripts/sync_excel.py
 | process_inventory.mjs | Node | 比对 + 报告 + Excel 指令 |
 | sync_excel.py | Python | 写 C 列 + 标红 |
 | append_row.py | Python | 表格缺行时补 A/B/C 行 |
-| js_setup_query.js | JS | 设查询参数 + 提交 SKU（浏览器内 eval） |
+| js_setup_query.js | JS | 设查询参数 + 提交 SKU（浏览器内 eval，含占位符） |
 | js_extract_all.js | JS | 首页提取（浏览器内 eval） |
 | js_extract_page.js | JS | 翻页提取（浏览器内 eval） |
 | ab_run.mjs | Node | 单次 agent-browser 命令封装（调试用） |
 
 ## 维护 SKU 清单
 
-新增/删除 SKU 时，**同时**改两处：
-1. `scripts/js_setup_query.js` 的 `SKUS` 变量（换行分隔，浏览器查询用）。
-2. `scripts/process_inventory.mjs` 的 `SKU_ORDER` 数组（报告排序 + Excel 更新用）。
+新增/删除 SKU 只需改**一处**：`config.json` 的 `skuList` 数组。
 
-两处顺序与数量必须一致，否则报告排序错乱或 Excel 漏更新。
+脚本运行时自动：
+- `fetch_inventory.mjs` 把 `skuList` 注入 `js_setup_query.js` 的 SKUS（浏览器查询）。
+- `process_inventory.mjs` 用同一 `skuList` 做报告排序 + Excel 更新。
+
+无需再手动同步 `js_setup_query.js` 里的硬编码 SKUS（该文件已改为占位符模板）。

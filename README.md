@@ -8,21 +8,31 @@
 
 复制整个 `dajian-inventory/` 目录到 `~/.workbuddy/skills/`（用户级）或项目 `.workbuddy/skills/`（项目级）。
 
-## 首次使用（必读）
+```bash
+git clone https://github.com/jaychou805/dajian-inventory.git ~/.workbuddy/skills/dajian-inventory
+```
 
-1. **改 `config.json`**：把 `paths` 下的 node / agent-browser / python / edsdkDir / chromeProfile / workDir / excelFile 改成你机器上的真实路径。
-2. **装依赖**：agent-browser（node 模块）、Python 3.11+、edsdk.py（WorkBuddy 本地 Office 编辑技能）。
-3. **登录 ERP**：跑 `scripts/erp_login_holder.mjs`，弹窗内登录智汇 ERP，登录态持久化到 chromeProfile。
+## 首次使用
 
-> 所有路径/SKU/仓库配置集中在 `config.json`，脚本运行时读取，改这一处即可迁移。
+**👉 直接看 [`docs/setup.md`](docs/setup.md)**——同事专用傻瓜式上手文档，4 步从零到能跑：
+
+1. 下载 skill
+2. 改 `config.json`（复制 `config.example.json` 改路径）
+3. 登录 ERP
+4. 日常对 WorkBuddy 说「跑库存监控」即可
+
+> 所有路径/SKU/仓库配置集中在 `config.json`，脚本运行时读取，改这一处即可迁移。`config.example.json` 是带占位符的模板，供首次配置参考。
 
 ## 结构
 
 ```
 dajian-inventory/
-├── config.json               # 配置中心（路径/SKU/仓库/ERP）
+├── config.json               # 配置中心（你的真实路径，已在仓库）
+├── config.example.json       # 模板（占位符，供同事参考）
 ├── SKILL.md                  # skill 主文档
 ├── README.md
+├── docs/
+│   └── setup.md              # 同事上手文档（从零到能跑）
 ├── scripts/
 │   ├── config.mjs            # 共享配置加载
 │   ├── fetch_inventory.mjs   # 采集

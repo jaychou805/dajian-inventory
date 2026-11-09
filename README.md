@@ -16,14 +16,31 @@ git clone https://github.com/jaychou805/dajian-inventory.git ~/.workbuddy/skills
 
 ## 首次使用
 
-**👉 直接看 [`docs/setup.md`](docs/setup.md)**——同事专用傻瓜式上手文档，4 步从零到能跑：
+**👉 直接看 [`docs/setup.md`](docs/setup.md)**——同事专用傻瓜式上手文档，5 步从零到能自动跑：
 
 1. 下载 skill
 2. **一键配置**：`node setup.mjs --excel "你的库存表.xlsx"`（自动探测 node/chrome/python/edsdk 路径）
 3. 登录 ERP：`node scripts/erp_login_holder.mjs`
 4. 日常对 WorkBuddy 说「跑库存监控」即可
+5. （可选）开启工作日 9:00 自动巡检：对 WorkBuddy 说「用大件库存 skill 开启工作日 9 点的定时巡检」
 
 > 所有路径/SKU/仓库/Excel 列配置集中在 `config.json`，`setup.mjs` 自动探测生成；`config.example.json` 是带占位符的模板。
+
+## 每天自动跑（工作日 09:00）
+
+一条命令就是完整链路：
+
+```bash
+node scripts/run_daily.mjs      # 采集 → 转换 → 比对/报告 → 同步 Excel
+```
+
+日志落在 `<workDir>/logs/daily-YYYY-MM-DD.log`；退出码 `2` 表示 ERP 会话过期，先跑 `node scripts/erp_login_holder.mjs` 恢复再重跑；`3` 表示 `config.json` 路径在本机不完整。
+
+要让它每个工作日早 9 点自动跑，装好后对 WorkBuddy 说一句：
+
+> 用大件库存 skill 开启工作日 9 点的定时巡检
+
+定时任务按机器/账号存，不随仓库分发（换电脑要重开一次）。创建参数、提示词模板、停用与排障见 [`docs/automation.md`](docs/automation.md)。
 
 ## 环境要求
 
@@ -44,10 +61,12 @@ dajian-inventory/
 ├── SKILL.md                   # skill 主文档（含关键坑）
 ├── README.md
 ├── docs/
-│   └── setup.md               # 同事上手文档（从零到能跑）
+│   ├── setup.md               # 同事上手文档（从零到能跑）
+│   └── automation.md          # 开启工作日 09:00 定时巡检
 ├── scripts/
 │   ├── config.mjs             # 共享配置加载 + 路径绝对化
 │   ├── cdp.mjs                # 系统 Chrome + CDP 直连（替代 agent-browser）
+│   ├── run_daily.mjs          # 一键编排：采集→转换→比对→同步 Excel（定时任务入口）
 │   ├── fetch_inventory.mjs    # 采集 + 翻页
 │   ├── erp_login_holder.mjs   # 会话恢复（备货页）
 │   ├── erp_session.mjs        # 主后台保活（旧，可不用）

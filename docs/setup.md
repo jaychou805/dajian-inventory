@@ -106,6 +106,25 @@ cat ~/.workbuddy/skills/dajian-inventory/erp_session_status.json
 
 ---
 
+## 第 5 步（可选）：让它每个工作日 9:00 自动跑
+
+先手动跑通一次，确认没问题：
+
+```bash
+node scripts/run_daily.mjs
+```
+
+然后对 WorkBuddy 说一句：
+
+> 用大件库存 skill 开启工作日 9 点的定时巡检
+
+它会调用定时任务接口创建「每周一至周五 09:00」的任务，跑的就是 `run_daily.mjs`。
+
+- 定时任务是**按机器/账号**存的，不随仓库分发——换了电脑要重新开一次。
+- 创建参数、提示词模板、停用/删除方法、常见故障：见 [`automation.md`](automation.md)。
+
+---
+
 ## 遇到问题？
 
 | 现象 | 原因 | 解法 |

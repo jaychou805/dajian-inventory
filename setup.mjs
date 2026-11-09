@@ -160,6 +160,11 @@ function main() {
   }
   console.log('   然后登录 ERP：node scripts/erp_login_holder.mjs');
   console.log('   登录后对 WorkBuddy 说「跑库存监控」即可');
+  console.log('');
+  console.log('=== 想让它每个工作日 9:00 自动跑 ===');
+  console.log('   先手动跑通一次：node scripts/run_daily.mjs');
+  console.log('   再对 WorkBuddy 说「用大件库存 skill 开启工作日 9 点的定时巡检」');
+  console.log('   （创建参数与提示词模板见 docs/automation.md）');
 }
 
 main();

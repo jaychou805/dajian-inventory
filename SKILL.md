@@ -1,6 +1,6 @@
 ---
 name: dajian-inventory
-description: 大件库存——工作日海外仓库存自动监控与 Excel 同步。从智汇创想 ERP「海外仓备货」页全自动采集指定 SKU 的三个统计仓可用库存，与前一工作日快照比对，标红低库存（A 或 B ≤3），并同步写回本机 Excel 的库存列（默认 C 列，位置可配置）。浏览器层用系统 Chrome + CDP 直连，零 npm 依赖。适用于跨境电商海外仓库存日常巡检、低库存预警、库存日报生成。关键词：大件库存、海外仓库存、库存监控、库存日报、备货、智汇 ERP、低库存预警、inventory monitor、stock sync、海外仓。
+description: 大件库存——工作日海外仓库存自动监控与 Excel 同步。从智汇创想 ERP「海外仓备货」页全自动采集指定 SKU 的三个统计仓可用库存，与前一工作日快照比对，标红低库存（A 或 B ≤3），并同步写回本机 Excel 的库存列（默认 C 列，位置可配置）。浏览器层用系统 Chrome + CDP 直连，零 npm 依赖。适用于跨境电商海外仓库存日常巡检、低库存预警、库存日报生成。关键词：大件库存、海外仓库存、库存监控、库存日报、库存日报定时任务、工作日自动化、备货、智汇 ERP、低库存预警、inventory monitor、stock sync、海外仓。
 agent_created: true
 ---
 
@@ -15,6 +15,7 @@ agent_created: true
 ## 何时使用
 
 - 用户要求「查库存 / 同步库存 / 跑库存监控 / 生成库存日报」。
+- 用户要求「开启定时巡检 / 加个工作日 9 点的定时任务」→ 见「定时自动化」章节，直接建 recurring 任务。
 - 每日定时自动化触发（周一至周五 9:00）。
 - 用户粘贴 ERP 查询结果，要求生成变化报告与 Excel 更新。
 
@@ -73,6 +74,12 @@ agent_created: true
 ```
 fetch_inventory.mjs  →  convert_extracted.mjs  →  process_inventory.mjs  →  sync_excel.py
     采集+翻页（CDP）      转 inventory-today.txt      比对+报告+Excel指令        写库存列 + 标红
+```
+
+**一条命令跑完四步**（定时自动化用的就是它）：
+
+```bash
+node scripts/run_daily.mjs
 ```
 
 ### 1. 采集（fetch_inventory.mjs）
@@ -138,6 +145,52 @@ python scripts/restructure_excel.py          # 输出 <原名>-库存列已调�
 
 用户手动粘贴 ERP 数据 → 存到 `<workDir>/inventory-snapshots/inventory-today.txt`（首行「共 N 条记录」，次行表头 `产品SKU,产品名称,发货仓库,可用库存`，其后 CSV 行）→ 从 `process_inventory.mjs` 开始执行。
 
+## 定时自动化（工作日 09:00）
+
+定时任务**不随仓库分发**——它属于每台机器、每个 WorkBuddy 账号。安装后按本节开启一次，之后每个工作日早 9 点自动跑；换机器 / 重装 skill 需要重新开启。
+
+### 一条命令跑完整链路
+
+```bash
+node scripts/run_daily.mjs
+```
+
+- 依次执行 采集 → 转换 → 比对/报告 → 同步 Excel，任一步失败**立即停止**，不写半份快照、不动 Excel。
+- 日志追加到 `<workDir>/logs/daily-YYYY-MM-DD.log`；全部成功时把 `report-today.md` 全文打印出来。
+- 退出码：`0` 成功 / `2` ERP 会话过期 / `3` 配置路径在本机不完整（换机器没跑 setup.mjs）/ 其他 = 出错步骤的退出码。
+- 调试参数：`--skip-fetch`（复用已有 `extracted_raw.txt`）、`--skip-excel`（只出报告不动表）、`--only=fetch,convert,process,excel`、`--quiet`。
+
+### 怎么开启（给 agent 的执行指令）
+
+用户说「开启每日库存巡检 / 加个工作日 9 点的定时任务」时，**直接调用 `automation_update`（mode=create）**。不要改用 Windows 计划任务或 crontab——那两条路拿不到 WorkBuddy 侧的浏览器登录态与提示词编排。
+
+| 参数 | 值 |
+|---|---|
+| name | `大件库存 · 工作日 09:00 巡检` |
+| scheduleType | `recurring` |
+| rrule | `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0` |
+| status | `ACTIVE` |
+| cwds | 本机 skill 目录绝对路径（含 `scripts/run_daily.mjs` 的那一层） |
+| prompt | 下面的模板，把 `<SKILL_DIR>` 换成本机实际路径 |
+
+prompt 模板（必须自包含——每次运行看不到历史对话）：
+
+> 运行大件库存 skill（目录：`<SKILL_DIR>`）。在该目录执行 `node scripts/run_daily.mjs`，它会依次完成 采集海外仓库存 → 转换 → 与前一工作日快照比对生成报告 → 同步 Excel（配置见同目录 `config.json`，日志写到 `workDir/logs/`）。完成后按 SKILL.md「结果报告格式」输出当日结论：采集条数与页面「共 N 条」是否一致、三个统计仓分布、变化与触红 SKU（A 或 B ≤3）、Excel 更新行数与缺失 SKU，并附 `workDir/inventory-snapshots/report-today.md`。失败处置：退出码 3 = `config.json` 路径在本机不可用，报告缺哪几项并提示运行 `node setup.mjs --excel "<库存表路径>"`；退出码 2 = ERP 会话过期，先运行 `node scripts/erp_login_holder.mjs` 恢复后重跑一次，仍失败则说明需要人工登录；其他退出码按日志如实报告失败步骤。严禁编造或沿用昨日库存数字。
+
+创建后 `automation_update` 会返回 `nextRunAt`，核对是否为下一个工作日 09:00。停用：mode=update + status=`PAUSED`；删除：mode=delete。
+
+完整步骤（验证 / 停用 / 换机器 / 排查）见 [`docs/automation.md`](docs/automation.md)。
+
+### 前置条件与失败处置
+
+| 情况 | 表现 | 处置 |
+|---|---|---|
+| config.json 还是上一台机器的路径 | `run_daily` 退出码 3，逐项列出缺失路径 | 跑 `node setup.mjs --excel "你的表.xlsx"` 按本机重写 |
+| ERP 会话过期（最常见） | `run_daily` 退出码 2 | 跑 `erp_login_holder.mjs` 弹窗恢复；真过期需人工登录一次后重跑 |
+| 采集条数与页面不符 | `convert` 退出 2，`run_daily` 停在「转换」 | 不写快照、不动 Excel；查页面分页/筛选是否被改动 |
+| Excel 被 WPS/Excel 占用 | 保存报 `Export file is occupied` | 自动改存 `<原名>-YYYYMMDD.xlsx`，不杀用户进程 |
+| 前一工作日无快照 | 报告标注「首次建立基准」 | 正常，当日只建基准不出变化 |
+
 ## 比较基准规则
 
 - **周一**：与上周五最后一次成功快照比较。
@@ -191,6 +244,7 @@ python scripts/restructure_excel.py          # 输出 <原名>-库存列已调�
 |---|---|---|
 | config.mjs | Node | 共享配置加载 + workDir/chromeProfile 绝对化 + 目录懒创建 |
 | cdp.mjs | Node | 系统 Chrome + CDP 直连封装（替代 agent-browser），对外提供 `run()` 兼容层 |
+| run_daily.mjs | Node | **一键编排**：采集→转换→比对→同步 Excel，含分步日志/耗时/退出码（定时自动化入口） |
 | fetch_inventory.mjs | Node | 全自动采集 + 翻页补采 |
 | erp_login_holder.mjs | Node | 备货页保活 + 会话恢复 |
 | erp_session.mjs | Node | 主后台(index.aspx)保活（旧，可不用） |

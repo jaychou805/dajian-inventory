@@ -1,0 +1,14 @@
+# 依赖 / 运行时产物
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# 本地运行时数据（workDir 里也会生成，这里只是兜底）
+extracted_raw.txt
+erp_session_status.json
+inventory-snapshots/
+
+# 本地覆盖的配置（如需保留个人路径请忽略本行）
+# config.json

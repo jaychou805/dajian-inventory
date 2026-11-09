@@ -7,12 +7,29 @@
   },
   "paths": {
     "node": "C:/Users/你的用户名/.workbuddy/binaries/node/versions/你的版本号/node.exe",
-    "agentBrowser": "C:/Users/你的用户名/.workbuddy/binaries/node/versions/你的版本号/node_modules/agent-browser/bin/agent-browser.js",
+    "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
     "python": "C:/Users/你的用户名/.workbuddy/binaries/python/versions/你的版本号/python.exe",
     "edsdkDir": "D:/WorkBuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/workbuddy-local-office-edit",
     "chromeProfile": "C:/Users/你的用户名/.workbuddy/erp-chrome-profile",
     "workDir": "C:/Users/你的用户名/WorkBuddy/1",
     "excelFile": "C:/Users/你的用户名/Desktop/你的库存表.xlsx"
+  },
+  "browser": {
+    "headless": false,
+    "launchTimeoutMs": 30000
+  },
+  "excel": {
+    "sheetId": "000001",
+    "skuCol": "A",
+    "nameCol": "B",
+    "inventoryCol": "C",
+    "headerRow": 0,
+    "autoAppendMissing": false,
+    "appendOnlyWithData": true,
+    "preferXlsx": true,
+    "outputFile": "",
+    "costCol": "",
+    "costHeaderNames": ["成本", "成本价", "采购成本"]
   },
   "warehouses": {
     "statistical": ["易达云美东仓", "盛宝隆美西仓（共仓）", "易可达美南仓"],

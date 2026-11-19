@@ -1,4 +1,4 @@
-// 一键跑完整个库存日报链路：采集 → 转换 → 比对/报告 → 同步 Excel
+// 一键跑完整个库存日报链路：采集 → 转换 → 比对/报告 → 同步 Excel → 上传报告到 GitHub
 // 供定时自动化直接调用：node scripts/run_daily.mjs
 //
 // 退出码：
@@ -10,7 +10,7 @@
 // 可选参数：
 //   --skip-fetch        跳过采集，从已存在的 extracted_raw.txt 继续
 //   --skip-excel        跳过 Excel 写入（只出报告）
-//   --only=a,b,c        只跑指定步骤（fetch/convert/process/excel）
+//   --only=a,b,c        只跑指定步骤（fetch/convert/process/excel/upload）
 //   --quiet             只在最后打印汇总
 import fs from 'fs';
 import path from 'path';
@@ -200,6 +200,21 @@ if (!failed && want('excel') && !skipExcel) {
   }
 } else if (!failed && (skipExcel || !want('excel'))) {
   log('· 跳过 Excel 写入');
+}
+
+// ---------- 5. 上传报告到 GitHub（失败不阻断主流程，只告警） ----------
+if (!failed && want('upload')) {
+  const hasGithub = cfg.github && cfg.github.repo && (cfg.github.token || process.env.GITHUB_TOKEN);
+  if (!hasGithub) {
+    log('· 跳过上传：未配置 github.repo / github.token');
+  } else {
+    const r = await runStep('上传报告到 GitHub', NODE, [path.join(SCRIPT_DIR, 'upload_report.mjs')], 3 * 60 * 1000);
+    summary.push({ step: '上传报告', code: r.code, sec: r.sec });
+    if (r.code !== 0) {
+      log('⚠ 上传报告失败（退出码 ' + r.code + '），不影响库存与 Excel 结果');
+      if (r.tail) log('  末尾输出：\n  ' + r.tail.trim().split('\n').slice(-4).join('\n  '));
+    }
+  }
 }
 
 // ---------- 汇总 ----------

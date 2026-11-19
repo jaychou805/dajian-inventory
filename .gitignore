@@ -10,5 +10,5 @@ extracted_raw.txt
 erp_session_status.json
 inventory-snapshots/
 
-# 本地覆盖的配置（如需保留个人路径请忽略本行）
-# config.json
+# 本地覆盖的配置（含本机路径与 GitHub token，不入库）
+config.json

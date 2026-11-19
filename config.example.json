@@ -18,6 +18,11 @@
     "headless": false,
     "launchTimeoutMs": 30000
   },
+  "github": {
+    "repo": "你的用户名/你的仓库名",
+    "token": "",
+    "branch": "master"
+  },
   "excel": {
     "sheetId": "000001",
     "skuCol": "A",

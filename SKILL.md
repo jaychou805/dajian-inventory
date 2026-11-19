@@ -18,6 +18,7 @@ agent_created: true
 - 用户要求「开启定时巡检 / 加个工作日 9 点的定时任务」→ 见「定时自动化」章节，直接建 recurring 任务。
 - 每日定时自动化触发（周一至周五 9:00）。
 - 用户粘贴 ERP 查询结果，要求生成变化报告与 Excel 更新。
+- 用户要求「查看今天的库存报告 / 查看最近库存日报」→ 用 GitHub API 读仓库 `reports/latest.md`（或 `reports/report-YYYY-MM-DD.md`）展示，见「查看今日报告」章节。
 
 ## 首次使用（别人 clone 后必读）
 
@@ -64,6 +65,9 @@ agent_created: true
 | 统计仓（严格精确匹配） | `warehouses.statistical` | 易达云美东仓、盛宝隆美西仓（共仓）、易可达美南仓 |
 | 排除仓 | `warehouses.excluded` | 易可达美东仓、西邮美东（非统计仓名称一律排除） |
 | SKU 清单 | `skuList` | 单一来源；脚本运行时自动注入查询与报告 |
+| GitHub 仓库 | `github.repo` | 报告上传目标，如 `jaychou805/dajian-inventory` |
+| GitHub token | `github.token` | 有 `repo` 权限的 PAT；留空用环境变量 `GITHUB_TOKEN` |
+| GitHub 分支 | `github.branch` | 默认 `master` |
 
 **标红规则**：库存列 = 易达云美东(A) + 盛宝隆美西(B)，格式 `A+B`；A 或 B 任一 ≤3 → 整格红字（判单个，不是合计）。
 
@@ -213,6 +217,39 @@ prompt 模板（必须自包含——每次运行看不到历史对话）：
 
 仓库简称映射：易达云美东仓→易达云美东；盛宝隆美西仓（共仓）→盛宝隆美西；易可达美南仓→易可达美南。
 
+## 报告上传 GitHub & 查看今日报告
+
+每日链路成功后会把报告自动上传到 GitHub 仓库的 `reports/` 目录，方便别人用「查看今天的库存报告」直接取到结果，不必登录 ERP。
+
+### 上传规则（scripts/upload_report.mjs）
+
+- 每次成功生成报告后，上传：
+  - `reports/report-YYYY-MM-DD.md`（按日期命名，可回溯）
+  - `reports/latest.md`（固定名，始终指向最新一天）
+- **只保留最近 2 天**的 `report-*.md`；第 3 天报告写入后，自动删除最早那一天的。
+- 上传是链路最后一步，**失败不阻断**库存采集与 Excel 同步，只在日志告警。
+
+### 配置（config.json 的 github 段）
+
+```json
+"github": {
+  "repo": "你的用户名/你的仓库名",
+  "token": "",
+  "branch": "master"
+}
+```
+
+- `token`：有 `repo` 权限的 PAT（`ghp_...`）。留空则用环境变量 `GITHUB_TOKEN`。
+- 上传走 GitHub Contents API，零依赖（Node 22 内置 fetch），并自动绕过本机代理。
+
+### 别人怎么「查看今天的库存报告」
+
+当用户说「查看今天的库存报告 / 看下最近库存日报」时，agent 应：
+
+1. 读 `config.json` 的 `github.repo` / `github.token`（或 `GITHUB_TOKEN`）。
+2. 调 GitHub API `GET /repos/<repo>/contents/reports/latest.md?ref=<branch>`，把返回的 base64 内容解码为 Markdown 展示。
+3. 若需指定某天，读 `reports/report-YYYY-MM-DD.md`；也可列 `GET /repos/<repo>/contents/reports` 看现有报告清单。
+
 ## 关键坑（勿再踩）
 
 **浏览器 / CDP 层**
@@ -244,12 +281,13 @@ prompt 模板（必须自包含——每次运行看不到历史对话）：
 |---|---|---|
 | config.mjs | Node | 共享配置加载 + workDir/chromeProfile 绝对化 + 目录懒创建 |
 | cdp.mjs | Node | 系统 Chrome + CDP 直连封装（替代 agent-browser），对外提供 `run()` 兼容层 |
-| run_daily.mjs | Node | **一键编排**：采集→转换→比对→同步 Excel，含分步日志/耗时/退出码（定时自动化入口） |
+| run_daily.mjs | Node | **一键编排**：采集→转换→比对→同步 Excel→上传报告，含分步日志/耗时/退出码（定时自动化入口） |
 | fetch_inventory.mjs | Node | 全自动采集 + 翻页补采 |
 | erp_login_holder.mjs | Node | 备货页保活 + 会话恢复 |
 | erp_session.mjs | Node | 主后台(index.aspx)保活（旧，可不用） |
 | convert_extracted.mjs | Node | extracted_raw → inventory-today |
 | process_inventory.mjs | Node | 比对 + 报告 + Excel 指令 |
+| upload_report.mjs | Node | 报告上传 GitHub（reports/ 按日期 + latest.md，只保留最近 2 天） |
 | sync_excel.py | Python | 写库存列 + 标红（列可配置、自动探行、xls→xlsx、可选补行） |
 | restructure_excel.py | Python | 一次性搬列：成本列挪末尾、库存列腾空（另存新文件 + 校验） |
 | setup.mjs | Node | 一键探测路径生成 config.json |
